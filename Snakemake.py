@@ -1,5 +1,5 @@
 rule all:
-	"report.txt"
+	"complexity_report.txt"
 
 
 rule bam_to_intersect_bed:
@@ -36,6 +36,19 @@ rule uniquely_mapping_reads:
 		"grep 'Uniquely mapped reads number' {input.star_log} | awk '{{print $6}}' >> {output}"
 
 
+
+rule total_reads:
+	"""Report the total number reads"""
+	output:
+		temp("{sample}/star/total_reads.txt")
+		# "{sample}/star/uniquely_mapping_reads.txt"
+	input:
+		star_log = "{sample}/star/Log.final.out"
+	shell:
+		"grep 'Number of input reads' {input.star_log} | awk '{{print $6}}' >> {output}"
+
+
+
 rule unique_mapping_positions:
 	"""Report the number of unique mapping positions """
 	output:
@@ -52,11 +65,12 @@ rule unique_mapping_positions:
 rule report:
 	"""Report the complexity information for sequencing run"""
 	output:
-		file = "report.txt"
+		file = "complexity_report.txt"
 	input:
 		unique_mappers = expand("{sample}/star/uniquely_mapping_reads.txt", sample=config["lookup"].values()),
 		gene_mappers = expand("{sample}/star/sum_gene_mapping_reads.txt",sample=config["lookup"].values()),
-		unique_positions = expand("{sample}/star/unique_mapping_positions.txt",sample=config["lookup"].values())
+		unique_positions = expand("{sample}/star/unique_mapping_positions.txt",sample=config["lookup"].values()),
+		total_reads = expand("{sample}/star/total_reads.txt",sample=config["lookup"].values())
 	script:
 		"calculate_complexity.py"
 
